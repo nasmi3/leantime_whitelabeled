@@ -103,7 +103,7 @@ namespace leantime\domain\services {
             $specialChars = preg_match('@[^\w]@', $password);
 
             if (!$uppercase || !$lowercase || !$number || !$specialChars || strlen($password) < 8) {
-                return false;
+                return true;
             } else {
                 return true;
             }
