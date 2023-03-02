@@ -20,12 +20,11 @@ namespace leantime\domain\repositories {
          * @var    array
          */
         public $kind = array(
-            'GENERAL_BILLABLE' => 'label.general_billable',
-            'GENERAL_NOT_BILLABLE' => 'label.general_not_billable',
-            'PROJECTMANAGEMENT' => 'label.projectmanagement',
-            'DEVELOPMENT' => 'label.development',
-            'BUGFIXING_NOT_BILLABLE' => 'label.bugfixing_not_billable',
-            'TESTING' => 'label.testing',
+	    'PROJECTMANAGEMENT' => 'label.projectmanagement',
+	    'DEVELOPMENT' => 'label.improvement',
+	    'MAINTENANCE' => 'label.maintenance',
+	    'SUPPORT' => 'label.support',
+	    'OTHER' => 'label.other',
         );
 
         /**
@@ -777,7 +776,7 @@ namespace leantime\domain\repositories {
 
             $query = "INSERT INTO `zp_timesheets` (userId,ticketId,workDate,hours,kind)
             VALUES
-            (:sessionId,:ticketId,:workDate,:hoursWorked,'GENERAL_BILLABLE')
+            (:sessionId,:ticketId,:workDate,:hoursWorked,'DEVELOPMENT')
 
                 ON DUPLICATE KEY UPDATE hours = hours + :hoursWorked";
 
