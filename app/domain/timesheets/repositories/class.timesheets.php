@@ -21,7 +21,7 @@ namespace leantime\domain\repositories {
          */
         public $kind = array(
 	    'PROJECTMANAGEMENT' => 'label.projectmanagement',
-	    'DEVELOPMENT' => 'label.improvement',
+	    'DEVELOPMENT' => 'label.development',
 	    'MAINTENANCE' => 'label.maintenance',
 	    'SUPPORT' => 'label.support',
 	    'OTHER' => 'label.other',
