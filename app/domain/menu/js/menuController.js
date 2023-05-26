@@ -18,8 +18,12 @@ leantime.menuController = (function () {
 
     var toggleSubmenu = function (submenuName) {
 
+        if(submenuName === "") {
+            return;
+        }
+
         var submenuDisplay = jQuery('#submenu-' + submenuName).css('display');
-        var submenuStatee = '';
+        var submenuState = '';
 
         if (submenuDisplay == 'none') {
             jQuery('#submenu-' + submenuName).css('display', 'block');
@@ -52,48 +56,60 @@ leantime.menuController = (function () {
     var _initLeftMenuHamburgerButton = function () {
 
 
+        var newWidth = 68;
         if(window.innerWidth < 576) {
-            jQuery('.barmenu').removeClass('open')
+
         }
 
+
+        /*
+
         if (jQuery('.barmenu').hasClass('open')) {
+
             jQuery('.rightpanel').css({marginLeft: '240px'});
-            jQuery('.header').css({marginLeft: '240px', width:'calc(100%-240px)'});
+            jQuery('.header').animate({marginLeft: '240px'}, 'fast');
+            newWidth =  jQuery('.header').parent().width() - 240;
+            jQuery('.header').animate({width:newWidth}, 'fast');
             jQuery('.logo, .leftpanel').css({marginLeft: 0});
-            leantime.menuRepository.updateUserMenuSettings("open");
+
+            jQuery('.logo').show();
+            jQuery('.logo, #expandedMenu').css({display: 'block'});
+            jQuery("#minimizedMenu").css({display: 'none'});
+
         } else {
-            jQuery('.rightpanel, .header').css({marginLeft: 0});
-            jQuery('.header').css({marginLeft: 0, width:'100%'});
-            jQuery('.logo, .leftpanel').css({marginLeft: '-240px'});
-            leantime.menuRepository.updateUserMenuSettings("closed");
-        }
+
+            jQuery('.rightpanel').css({marginLeft: '68px'});
+            jQuery('.header').animate({marginLeft: '68px'}, 'fast');
+
+            newWidth =  jQuery('.header').parent().width() - 68;
+            jQuery('.header').animate({width:newWidth}, 'fast');
+            jQuery('.logo, .leftpanel').css({marginLeft: '0'});
+            jQuery('.logo').hide();
+            jQuery('.logo, #expandedMenu').css({display: 'none'});
+            jQuery("#minimizedMenu").css({display: 'block'});
+
+        }*/
 
         jQuery('.barmenu').click(function () {
 
-            var lwidth = '240px';
+            if (jQuery(".mainwrapper").hasClass('menuopen')) {
 
+                jQuery(".mainwrapper").removeClass("menuopen");
+                jQuery(".mainwrapper").addClass("menuclosed");
 
-            if (!jQuery(this).hasClass('open')) {
-                jQuery('.header').animate({marginLeft: '240px', width:'-=240px'}, 'fast');
-
-                jQuery('.logo, .leftpanel').animate({marginLeft: 0}, 'fast');
-
-                jQuery('.rightpanel').animate({marginLeft: '240px'}, 'fast', function () {
-                    jQuery('.barmenu').addClass('open');
-                });
-
-
-                leantime.menuRepository.updateUserMenuSettings("open");
-            } else {
-                jQuery('.rightpanel').animate({marginLeft: 0}, 'fast', function () {
-                    jQuery('.barmenu').removeClass('open');
-                });
-
-                jQuery('.header').animate({marginLeft: '0', width:'100%'}, 'fast');
-                jQuery('.logo, .leftpanel').animate({marginLeft: '-' + '240px'}, 'fast');
-
+                //If it doesn't have the class open, the user wants it to be open.
                 leantime.menuRepository.updateUserMenuSettings("closed");
+
+            } else {
+
+                jQuery(".mainwrapper").removeClass("menuclosed");
+                jQuery(".mainwrapper").addClass("menuopen");
+
+                //If it doesn't have the class open, the user wants it to be open.
+                leantime.menuRepository.updateUserMenuSettings("open");
+
             }
+
         });
 
     };
@@ -106,19 +122,72 @@ leantime.menuController = (function () {
 
     };
 
-    var toggleClientList = function (id, element) {
+    var toggleClientListHorizontal = function (id, element) {
 
-        jQuery(".client_" + id).toggle("fast");
+        jQuery(".selectorList.projectList li").not(".nav-header, .fixedBottom").hide();
 
-        if (jQuery(element).find("i").hasClass("fa-angle-down")) {
-            jQuery(element).find("i").removeClass("fa-angle-down");
-            jQuery(element).find("i").addClass("fa-angle-up");
-        } else {
-            jQuery(element).find("i").removeClass("fa-angle-up");
-            jQuery(element).find("i").addClass("fa-angle-down");
+        jQuery(".client_" + id).show();
+        jQuery(".client_" + id).show();
+
+        jQuery(".selectorList.clientList li").removeClass("active");
+        jQuery(element).addClass("active");
+
+
+    };
+
+    var toggleClientList = function (id, element, set="") {
+
+        //MEthod is executed on click and does the oposite of the current state.
+        //(eg when closed->open; when open->close)
+        //To force a state we need to ensure it is the oposite of the state requested
+        if(set === "closed") {
+            jQuery(element).removeClass("closed");
+            jQuery(element).removeClass("open");
+            jQuery(element).addClass("open");
+        }else if(set === "open"){
+            jQuery(element).removeClass("open");
+            jQuery(element).removeClass("closed");
+            jQuery(element).addClass("closed");
         }
 
-    }
+        if(jQuery(element).hasClass("open")){
+
+            jQuery(".client_" + id).hide("fast");
+            jQuery(element).removeClass("open");
+            jQuery(element).addClass("closed");
+
+            jQuery(element).find("i").removeClass("fa-angle-down");
+            jQuery(element).find("i").addClass("fa-angle-right");
+
+            updateClientDropdownSetting(id, "closed");
+
+        }else{
+
+            jQuery(".client_" + id).show("fast");
+            jQuery(element).removeClass("closed");
+            jQuery(element).addClass("open");
+
+            jQuery(element).find("i").removeClass("fa-angle-right");
+            jQuery(element).find("i").addClass("fa-angle-down");
+
+            updateClientDropdownSetting(id, "open");
+
+        }
+
+    };
+
+    let updateClientDropdownSetting = function(clientId, state) {
+
+        jQuery.ajax({
+            type : 'PATCH',
+            url  : leantime.appUrl + '/api/submenu',
+            data : {
+                submenu : "clientDropdown-"+clientId,
+                state   : state
+            }
+        });
+
+    };
 
     // Make public what you want to have public, everything else is private
     return {

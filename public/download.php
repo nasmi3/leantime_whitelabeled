@@ -12,15 +12,19 @@ require_once APP_ROOT . '/config/appSettings.php';
 
 $config = \leantime\core\environment::getInstance();
 $settings = new leantime\core\appSettings();
-$settings->loadSettings($config->defaultTimezone, $config->debug, $config->logPath);
+$settings->loadSettings($config);
 
 $login = \leantime\domain\services\auth::getInstance(leantime\core\session::getSID());
 
 
 if ($login->logged_in()!==true) {
 
+    header('Pragma: public');
+    header('Cache-Control: max-age=86400');
+    header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
     header('Content-Type: image/jpeg');
-    header('Cache-Control: no-cache');
+
+
 
     ob_end_clean();
     clearstatcache();
@@ -71,14 +75,14 @@ function getFileLocally(){
             $path_parts = pathinfo($fullPath);
 
             if($ext == 'pdf'){
+
                 header('Content-type: application/pdf');
-                header("Content-disposition: attachment; filename=\"".$realName.".".$ext."\"");
+                header("Content-Disposition: inline; filename=\"".$realName.".".$ext."\"");
 
             }elseif($ext == 'jpg' || $ext == 'jpeg' || $ext == 'gif' || $ext == 'png'){
 
-                header('content-type: '. $mimes[$ext]);
-                header('content-disposition: inline; filename="'.$realName.".".$ext.'";');
-                header('Cache-Control: max-age=300');
+                header('Content-type: '. $mimes[$ext]);
+                header('Content-disposition: inline; filename="'.$realName.".".$ext.'";');
 
             }else{
 
@@ -147,6 +151,12 @@ function getFileFromS3(){
             'Key' => $fileName,
             'Body'   => 'this is the body!'
         ]);
+
+        if($ext == 'jpg' || $ext == 'jpeg' || $ext == 'gif' || $ext == 'png') {
+            header('Content-Type: ' . $result['ContentType']);
+            header("Content-Disposition: inline; filename=\"".$fileName."\"");
+        }
+
 
         echo($result['Body']);
 

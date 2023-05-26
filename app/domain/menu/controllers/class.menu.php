@@ -9,10 +9,12 @@ namespace leantime\domain\controllers {
 
     class menu extends controller
     {
-        private $projectService;
-        private $ticketService;
-        private $menuRepo;
-        private $projectRepo;
+        private services\projects $projectService;
+        private services\tickets $ticketService;
+        private repositories\menu $menuRepo;
+
+        private services\setting $settingSvc;
+
 
         public function init()
         {
@@ -20,7 +22,8 @@ namespace leantime\domain\controllers {
             $this->projectService = new services\projects();
             $this->ticketService = new services\tickets();
             $this->menuRepo = new repositories\menu();
-            $this->projectRepo = new repositories\projects();
+            $this->settingSvc = new services\setting();
+
         }
 
         public function run()
@@ -28,8 +31,10 @@ namespace leantime\domain\controllers {
 
             $allAssignedprojects = array();
             $allAvailableProjects = array();
+            $recentProjects = array();
 
             if (isset($_SESSION['userdata'])) {
+
                 $allAssignedprojects = $this->projectService->getProjectsAssignedToUser(
                     $_SESSION['userdata']['id'],
                     'open'
@@ -40,22 +45,43 @@ namespace leantime\domain\controllers {
                     'open',
                     $_SESSION['userdata']['clientId']
                 );
+
+                $recent = $this->settingSvc->getSetting("usersettings." . $_SESSION['userdata']['id'] . ".recentProjects");
+                $recentArr = unserialize($recent);
+
+                if(is_array($recentArr) && is_array($allAvailableProjects)) {
+                    $availableProjectColumn = array_column($allAvailableProjects, 'id');
+                    foreach ($recentArr as $recentItem) {
+                        $found_key = array_search($recentItem, $availableProjectColumn);
+                        if ($found_key !== false) {
+                            $recentProjects[] = $allAvailableProjects[$found_key];
+                        }
+                    }
+                }
             }
 
             if (isset($_SESSION['currentProject'])) {
-                $project = $this->projectRepo->getProject($_SESSION['currentProject']);
+                $project = $this->projectService->getProject($_SESSION['currentProject']);
 
                 $menuType = ($project !== false && isset($project['menuType']))
                     ? $project['menuType']
                     : repositories\menu::DEFAULT_MENU;
+
+                if($project !== false && isset($project["clientId"])) {
+                    $this->tpl->assign('currentClient', $project["clientId"]);
+                }else{
+                    $this->tpl->assign('currentClient', '');
+                }
             } else {
                 $menuType = repositories\menu::DEFAULT_MENU;
+                $this->tpl->assign('currentClient', "");
             }
 
             $this->tpl->assign('current', explode(".", core\frontcontroller::getCurrentRoute()));
             $this->tpl->assign('allAssignedProjects', $allAssignedprojects);
             $this->tpl->assign('allAvailableProjects', $allAvailableProjects);
-            $this->tpl->assign('currentProject', $_SESSION['currentProject']);
+            $this->tpl->assign('recentProjects', $recentProjects);
+            $this->tpl->assign('currentProject', $_SESSION['currentProject'] ?? null);
             $this->tpl->assign('menuStructure', $this->menuRepo->getMenuStructure($menuType));
 
             $this->tpl->displayPartial('menu.menu');

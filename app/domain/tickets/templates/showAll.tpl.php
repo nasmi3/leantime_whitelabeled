@@ -317,8 +317,8 @@
                     <th style="max-width: 350px;"><?= $this->__("label.title"); ?></th>
                     <th class="status-col"><?= $this->__("label.todo_status"); ?></th>
                     <th class="milestone-col"><?= $this->__("label.milestone"); ?></th>
-                    <th><?= $this->__("label.effort"); ?></th>
-                    <th><?= $this->__("label.priority"); ?></th>
+                    <th class="effort-col"><?= $this->__("label.effort"); ?></th>
+                    <th class="priority-col"><?= $this->__("label.priority"); ?></th>
                     <th class="user-col"><?= $this->__("label.editor"); ?>.</th>
                     <th class="sprint-col"><?= $this->__("label.sprint"); ?></th>
                     <th class="tags-col"><?= $this->__("label.tags"); ?></th>
@@ -334,18 +334,39 @@
             <tbody>
                 <?php $this->dispatchTplEvent('allTicketsTable.beforeFirstRow', ['tickets' => $allTickets]); ?>
                 <?php foreach ($allTickets as $rowNum => $row) {?>
-                    <tr>
+                    <tr style="height:1px;">
                         <?php $this->dispatchTplEvent('allTicketsTable.afterRowStart', ['rowNum' => $rowNum, 'tickets' => $allTickets]); ?>
                         <td data-order="<?=$this->e($row['headline']); ?>">
+                            <?php if($row['dependingTicketId'] > 0){ ?>
+                                <small><a href="<?=$_SESSION['lastPage'] ?>/#/tickets/showTicket/<?=$row['dependingTicketId'] ?>"><?=$this->escape($row['parentHeadline']) ?></a></small> //<br />
+                            <?php } ?>
                             <a class='ticketModal' href="<?=BASE_URL ?>/tickets/showTicket/<?=$this->e($row['id']); ?>"><?=$this->e($row['headline']); ?></a></td>
-                        <td class="dropdown-cell" data-order="<?=$statusLabels[$row['status']]["name"]?>">
+
+
+
+                        <?php
+
+                        if(isset($statusLabels[$row['status']])){
+                            $class=$statusLabels[$row['status']]["class"];
+                            $name=$statusLabels[$row['status']]["name"];
+                            $sortKey = $statusLabels[$row['status']]["sortKey"];
+                        }else{
+                            $class = 'label-important';
+                            $name = 'new';
+                            $sortKey = 0;
+                        }
+
+                        ?>
+                        <td class="dropdown-cell" data-order="<?=$name ?>">
                             <div class="dropdown ticketDropdown statusDropdown colorized show">
-                                <a class="dropdown-toggle status <?=isset($statusLabels[$row['status']]) ? $statusLabels[$row['status']]["class"] : '' ?>" href="javascript:void(0);" role="button" id="statusDropdownMenuLink<?=$row['id']?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <a class="dropdown-toggle status <?=$class ?>" href="javascript:void(0);" role="button" id="statusDropdownMenuLink<?=$row['id']?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+
                                     <span class="text">
                                         <?php
-                                        if (isset($statusLabels[$row['status']])) {
-                                            echo $statusLabels[$row['status']]["name"];
-                                        }
+
+                                            echo $name;
+
                                         ?>
 
                                     </span>
@@ -365,7 +386,7 @@
 
 
                         <?php
-                        if ($row['dependingTicketId'] != "" && $row['dependingTicketId'] != 0) {
+                        if ($row['milestoneid'] != "" && $row['milestoneid'] != 0) {
                             $milestoneHeadline = $this->escape($row['milestoneHeadline']);
                         } else {
                             $milestoneHeadline = $this->__("label.no_milestone");
@@ -411,7 +432,13 @@
                                 </ul>
                             </div>
                         </td>
-                        <td class="dropdown-cell"  data-order="<?=$row['priority'] ? $priorities[$row['priority']] : $this->__("label.priority_unkown"); ?>">
+
+                        <td class="dropdown-cell"  data-order="<?php
+                        if ($row['priority'] != '' && $row['priority'] > 0) {
+                            echo $priorities[$row['priority']];
+                        } else {
+                            echo $this->__("label.priority_unkown");
+                        }?>">
                             <div class="dropdown ticketDropdown priorityDropdown show">
                                 <a class="dropdown-toggle label-default priority priority-bg-<?=$row['priority']?>" href="javascript:void(0);" role="button" id="priorityDropdownMenuLink<?=$row['id']?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                             <span class="text"><?php

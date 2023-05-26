@@ -328,7 +328,12 @@ namespace leantime\domain\repositories {
          */
         public function editUser(array $values, $id)
         {
-
+            if ($values['password'] != '') {
+                $chgPW = " password = :password, ";
+            } else {
+                $chgPW = "";
+            }
+            
             $query = "UPDATE `zp_user` SET
 				firstname = :firstname,
 				lastname = :lastname,
@@ -338,8 +343,8 @@ namespace leantime\domain\repositories {
 				role = :role,
 				hours = :hours,
 				wage = :wage,
-				clientId = :clientId,
-				password = :password
+                " . $chgPW . "
+				clientId = :clientId
 			 WHERE id = :id LIMIT 1";
 
             $stmn = $this->db->database->prepare($query);
@@ -353,7 +358,9 @@ namespace leantime\domain\repositories {
             $stmn->bindValue(':wage', $values['wage'], PDO::PARAM_STR);
             $stmn->bindValue(':clientId', $values['clientId'], PDO::PARAM_STR);
             $stmn->bindValue(':id', $id, PDO::PARAM_STR);
-            $stmn->bindValue(':password', $values['password'], PDO::PARAM_STR);
+            if ($values['password'] != '') {
+                $stmn->bindValue(':password', password_hash($values['password'], PASSWORD_DEFAULT), PDO::PARAM_STR);
+            }
 
             $result = $stmn->execute();
             $stmn->closeCursor();
@@ -433,7 +440,7 @@ namespace leantime\domain\repositories {
             $stmn->bindValue(':id', $id, PDO::PARAM_STR);
 
             if ($values['password'] != '') {
-                $stmn->bindValue(':password', $values['password'], PDO::PARAM_STR);
+                $stmn->bindValue(':password', password_hash($values['password'], PASSWORD_DEFAULT), PDO::PARAM_STR);
             }
 
             $stmn->execute();
@@ -485,7 +492,7 @@ namespace leantime\domain\repositories {
             $stmn->bindValue(':user', $values['user'], PDO::PARAM_STR);
             $stmn->bindValue(':role', $values['role'], PDO::PARAM_STR);
 
-            $stmn->bindValue(':password', $values['password'], PDO::PARAM_STR);
+            $stmn->bindValue(':password', password_hash($values['password'], PASSWORD_DEFAULT), PDO::PARAM_STR);
             $stmn->bindValue(':clientId', $values['clientId'], PDO::PARAM_INT);
 
             if (isset($values['source'])) {
@@ -568,27 +575,27 @@ namespace leantime\domain\repositories {
         public function getProfilePicture($id)
         {
 
-            $return = BASE_URL . '/images/default-user.png';
+            $value = false;
+            if ($id !== false) {
 
-            if ($id === false) {
-                return $return;
+                $sql = "SELECT profileId, firstname, lastname FROM `zp_user` WHERE id = :id LIMIT 1";
+
+                $stmn = $this->db->database->prepare($sql);
+                $stmn->bindValue(':id', $id, PDO::PARAM_INT);
+
+                $stmn->execute();
+                $value = $stmn->fetch();
+                $stmn->closeCursor();
+
             }
 
-            $sql = "SELECT profileId, firstname, lastname FROM `zp_user` WHERE id = :id LIMIT 1";
-
-            $stmn = $this->db->database->prepare($sql);
-            $stmn->bindValue(':id', $id, PDO::PARAM_INT);
-
-            $stmn->execute();
-            $value = $stmn->fetch();
-            $stmn->closeCursor();
-
             if ($value !== false && $value['profileId'] != '') {
+
                 $files = new files();
                 $file = $files->getFile($value['profileId']);
 
                 if ($file) {
-                    $return = BASE_URL . "/download.php?module=" . $file['module'] . "&encName=" . $file['encName'] . "&ext=" . $file['extension'] . "&realName=" . $file['realName'];
+                    $return = $file['encName'] . "." . $file['extension'];
                 }
 
                 $filePath = ROOT . "/../userfiles/" . $file['encName'] . "." . $file['extension'];
@@ -597,9 +604,22 @@ namespace leantime\domain\repositories {
                 return $return;
 
             } elseif (isset($value['profileId']) && $value['profileId'] == '') {
+
                 $avatar = new \LasseRafn\InitialAvatarGenerator\InitialAvatar();
                 $image = $avatar
                     ->name($value['firstname'] . " " . $value['lastname'])
+                    ->font(ROOT . '/fonts/roboto/Roboto-Medium-webfont.woff')
+                    ->fontName("Verdana")
+                    ->background('#81B1A8')->color("#fff")
+                    ->generateSvg();
+
+                return $image;
+
+            } else{
+
+                $avatar = new \LasseRafn\InitialAvatarGenerator\InitialAvatar();
+                $image = $avatar
+                    ->name("👻")
                     ->font(ROOT . '/fonts/roboto/Roboto-Medium-webfont.woff')
                     ->fontName("Verdana")
                     ->background('#81B1A8')->color("#fff")
@@ -627,7 +647,11 @@ namespace leantime\domain\repositories {
             $stmn->bindValue(':id2', $id, PDO::PARAM_STR);
 
             foreach ($params as $key => $value) {
-                $stmn->bindValue(':' . core\db::sanitizeToColumnString($key), $value, PDO::PARAM_STR);
+                $cleanKey = core\db::sanitizeToColumnString($key);
+                $val = $value;
+                if ($cleanKey == 'password')
+                    $val = password_hash($value, PASSWORD_DEFAULT);
+                $stmn->bindValue(':' . $cleanKey, $val, PDO::PARAM_STR);
             }
 
             $return = $stmn->execute();

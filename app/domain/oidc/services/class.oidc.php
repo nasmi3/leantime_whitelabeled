@@ -9,6 +9,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use leantime\core\frontcontroller;
 use leantime\core\language;
+use leantime\domain\models\auth\roles;
 use leantime\domain\services;
 use leantime\domain\repositories;
 
@@ -113,7 +114,7 @@ class oidc {
         } else {
             $this->displayError("oidc.error.unsupportedToken");
         }
-        
+
         if($userInfo != null) {
             $this->login($userInfo);
         } else {
@@ -136,7 +137,6 @@ class oidc {
         }
 
         $user = $this->userRepo->getUserByEmail($userName);
-
 
         if($user === false) {
             //create user if it doesn't exist yet
@@ -189,18 +189,21 @@ class oidc {
                 'client_secret' => $this->clientSecret
             ]
         ]);
-        $contentType = $response->getHeaders()['Content-Type'][0];
+        $headerArray = [];
+        foreach($response->getHeaders() as $header => $values) {
+            $headerArray[strtolower($header)] = $values;
+        }
+        $contentType = array_pop($headerArray['content-type']);
         switch($contentType) {
             case 'application/x-www-form-urlencoded; charset=utf-8':
             case 'application/x-www-form-urlencoded':
                 $result = [];
                 parse_str($response->getBody()->getContents(), $result);
                 return $result;
-
-            case 'application/json':
+            default:
                 return json_decode($response->getBody()->getContents(), true);
         }
-        
+
     }
 
     private function readMultilayerKey(array $topic, string $key): string {
@@ -220,7 +223,6 @@ class oidc {
 
         $tokenData = json_decode($this->decodeBase64Url($content), true);
 
-        die();
 
         if($this->trimTrailingSlash($tokenData['iss']) != $this->providerUrl) {
             $this->displayError('oidc.error.providerMismatch', $tokenData['iss'], $this->providerUrl);
@@ -254,7 +256,7 @@ class oidc {
             $this->displayError("oidc.error.unsupportedAlgorythm", $algorythmName);
         }
 
-        
+
         return $map[$algorythmName];
     }
 
@@ -287,7 +289,7 @@ class oidc {
             else if(!isset($kid[0]) || $kid == $key['kid']) {
                 $keySource = '';
                 if(isset($key['x5c'])) {
-                    $keySource = '-----BEGIN CERTIFICATE-----' . PHP_EOL . chunk_split( $key['x5c'][0], 64, PHP_EOL) . PHP_EOL . '-----END CERTIFICATE-----';
+                    $keySource = '-----BEGIN CERTIFICATE-----' . PHP_EOL . chunk_split( $key['x5c'][0], 64, PHP_EOL) . '-----END CERTIFICATE-----';
                 }
                 else if(isset($key['n'])) {
                     $this->displayError('oidc.error.unsupportedKeyFormat');
@@ -314,7 +316,7 @@ class oidc {
 
     private function loadEndpoints(): void {
 
-        
+
         if($this->configLoaded) {
             return;
         }

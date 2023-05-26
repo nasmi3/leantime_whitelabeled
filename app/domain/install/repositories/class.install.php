@@ -80,7 +80,10 @@ namespace leantime\domain\repositories {
             20111,
             20112,
             20113,
-            20114
+            20114,
+            20115,
+            20116,
+            20117
         );
 
         /**
@@ -156,6 +159,25 @@ namespace leantime\domain\repositories {
             }
         }
 
+        public function createDB($dbName) {
+
+            try {
+
+
+                $stmn = $this->database->prepare("CREATE SCHEMA :schemaName ;");
+                $stmn->bindValue(':dbName',$dbName, PDO::PARAM_STR);
+
+                $stmn->execute();
+
+                $stmn->closeCursor();
+
+                return true;
+            } catch (PDOException $e) {
+                error_log($e);
+                return false;
+            }
+        }
+
         /**
          * setupDB installs database
          *
@@ -174,7 +196,7 @@ namespace leantime\domain\repositories {
 
                 $stmn = $this->database->prepare($sql);
                 $stmn->bindValue(':email', $values["email"], PDO::PARAM_STR);
-                $stmn->bindValue(':password', $values["password"], PDO::PARAM_STR);
+                $stmn->bindValue(':password', password_hash($values['password'], PASSWORD_DEFAULT), PDO::PARAM_STR);
                 $stmn->bindValue(':firstname', $values["firstname"], PDO::PARAM_STR);
                 $stmn->bindValue(':lastname', $values["lastname"], PDO::PARAM_STR);
                 $stmn->bindValue(':dbVersion', $this->settings->dbVersion, PDO::PARAM_STR);
@@ -412,11 +434,14 @@ namespace leantime\domain\repositories {
                   `active` int(11) DEFAULT NULL,
 				  `menuType` MEDIUMTEXT DEFAULT NULL,
                   `psettings` MEDIUMTEXT NULL,
-                   `type` VARCHAR(45) NULL,
+                  `parent` VARCHAR(45) NULL,
+                   `type` INT(11) NULL,
                    `start` DATETIME NULL,
                    `end` DATETIME NULL,
                     `created` DATETIME NULL,
                     `modified` DATETIME NULL,
+                    `avatar` MEDIUMTEXT NULL ,
+                    `cover` MEDIUMTEXT NULL,
                   PRIMARY KEY (`id`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -504,7 +529,7 @@ namespace leantime\domain\repositories {
                   KEY `Sorting` (`sortindex`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-                insert  into `zp_tickets`(`id`,`projectId`,`headline`,`description`,`acceptanceCriteria`,`date`,`dateToFinish`,`priority`,`status`,`userId`,`os`,`browser`,`resolution`,`component`,`version`,`url`,`dependingTicketId`,`editFrom`,`editTo`,`editorId`,`planHours`,`hourRemaining`,`type`,`production`,`staging`,`storypoints`,`sprint`,`sortindex`,`kanbanSortIndex`) values
+                insert  into `zp_tickets`(`id`,`projectId`,`headline`,`description`,`acceptanceCriteria`,`date`,`dateToFinish`,`priority`,`status`,`userId`,`os`,`browser`,`resolution`,`component`,`version`,`url`,`milestoneid`,`editFrom`,`editTo`,`editorId`,`planHours`,`hourRemaining`,`type`,`production`,`staging`,`storypoints`,`sprint`,`sortindex`,`kanbanSortIndex`) values
                 (9,3,'Getting Started with Leantime','Look around and make yourself familiar with the system. ','','2015-11-30 00:00:00','1969-12-31 00:00:00',NULL,3,1,NULL,NULL,NULL,NULL,'',NULL,NULL,'1969-12-31 00:00:00','1969-12-31 00:00:00',1,0,0,'Story',0,0,0,0,NULL,NULL);
 
                 CREATE TABLE `zp_timesheets` (
@@ -670,6 +695,50 @@ namespace leantime\domain\repositories {
                   INDEX `userId,datetime` (`userId` ASC, `datetime` DESC),
                   INDEX `userId,read` (`userId` ASC, `read` DESC)
                   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+                  CREATE TABLE `zp_entity_relationship` (
+                  `id` INT NOT NULL AUTO_INCREMENT,
+                  `enitityA` INT NULL,
+                  `entityAType` VARCHAR(45) NULL,
+                  `entityB` INT NULL,
+                  `entityBType` VARCHAR(45) NULL,
+                  `relationship` VARCHAR(45) NULL,
+                  `createdOn` DATETIME NULL,
+                  `createdBy` INT NULL,
+                  `meta` TEXT NULL,
+                  PRIMARY KEY (`id`),
+                  INDEX `entityA` (`enitityA` ASC, `entityAType` ASC, `relationship` ASC),
+                  INDEX `entityB` (`entityB` ASC, `entityBType` ASC, `relationship` ASC)
+                  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+                  CREATE TABLE `zp_integration` (
+                      `id` INT NOT NULL AUTO_INCREMENT,
+                      `providerId` VARCHAR(45) NULL,
+                      `method` VARCHAR(45) NULL,
+                      `entity` VARCHAR(45) NULL,
+                      `fields` TEXT NULL,
+                      `schedule` VARCHAR(45) NULL,
+                      `notes` VARCHAR(45) NULL,
+                      `auth` TEXT NULL,
+                      `meta` VARCHAR(45) NULL,
+                      `createdOn` DATETIME NULL,
+                      `createdBy` INT NULL,
+                      PRIMARY KEY (`id`)
+                      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+                  CREATE TABLE `zp_reactions` (
+                      `id` INT NOT NULL AUTO_INCREMENT,
+                      `userId` INT NULL,
+                      `moduleId` INT NULL,
+                      `module` VARCHAR(45) NULL,
+                      `reaction` VARCHAR(45) NULL,
+                      `date` DATETIME NULL,
+                      PRIMARY KEY (`id`),
+                      INDEX `entity` (`moduleId` ASC, `module` ASC, `reaction` ASC),
+                      INDEX `user` (`userId` ASC, `moduleId` ASC, `module` ASC, `reaction` ASC)
+                      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             ";
 
             return $sql;
@@ -1207,7 +1276,6 @@ namespace leantime\domain\repositories {
             }
         }
 
-
         public function update_sql_20114(): bool|array
         {
 
@@ -1220,6 +1288,114 @@ namespace leantime\domain\repositories {
                 ADD COLUMN `end` DATETIME NULL,
                 ADD COLUMN `created` DATETIME NULL,
                 ADD COLUMN `modified` DATETIME NULL"
+            ];
+
+            foreach ($sql as $statement) {
+                try {
+                    $stmn = $this->database->prepare($statement);
+                    $stmn->execute();
+                } catch (PDOException $e) {
+                    array_push($errors, $statement . " Failed:" . $e->getMessage());
+                }
+            }
+
+            if (count($errors) > 0) {
+
+                return $errors;
+            } else {
+                return true;
+            }
+        }
+
+        public function update_sql_20115(): bool|array
+        {
+
+            $errors = array();
+
+            $sql = [
+                    " CREATE TABLE `zp_entity_relationships` (
+                        `id` INT NOT NULL AUTO_INCREMENT,
+                        `enitityA` INT NULL,
+                        `entityAType` VARCHAR(45) NULL,
+                        `entityB` INT NULL,
+                        `entityBType` VARCHAR(45) NULL,
+                        `relationship` VARCHAR(45) NULL,
+                        `createdOn` DATETIME NULL,
+                        `createdBy` INT NULL,
+                        `meta` TEXT NULL,
+                        PRIMARY KEY (`id`),
+                        INDEX `entityA` (`enitityA` ASC, `entityAType` ASC, `relationship` ASC),
+                        INDEX `entityB` (`entityB` ASC, `entityBType` ASC, `relationship` ASC)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+                "UPDATE `zp_tickets` SET milestoneid = dependingTicketId , dependingTicketId = '' WHERE type <> 'subtask' AND dependingTicketId > 0",
+            ];
+
+            foreach ($sql as $statement) {
+                try {
+                    $stmn = $this->database->prepare($statement);
+                    $stmn->execute();
+                } catch (PDOException $e) {
+                    array_push($errors, $statement . " Failed:" . $e->getMessage());
+                }
+            }
+
+            if (count($errors) > 0) {
+
+                return $errors;
+            } else {
+                return true;
+            }
+        }
+
+        public function update_sql_20116(): bool|array
+        {
+
+            $errors = array();
+
+            $sql = [
+                " CREATE TABLE `zp_reactions` (
+                      `id` INT NOT NULL AUTO_INCREMENT,
+                      `userId` INT NULL,
+                      `moduleId` INT NULL,
+                      `module` VARCHAR(45) NULL,
+                      `reaction` VARCHAR(45) NULL,
+                      `date` DATETIME NULL,
+                      PRIMARY KEY (`id`),
+                      INDEX `entity` (`moduleId` ASC, `module` ASC, `reaction` ASC),
+                      INDEX `user` (`userId` ASC, `moduleId` ASC, `module` ASC, `reaction` ASC)
+                      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+                "ALTER TABLE `zp_projects`
+                ADD COLUMN `avatar` MEDIUMTEXT NULL AFTER `modified`,
+                ADD COLUMN `cover` MEDIUMTEXT NULL AFTER `avatar`;"
+
+            ];
+
+            foreach ($sql as $statement) {
+                try {
+                    $stmn = $this->database->prepare($statement);
+                    $stmn->execute();
+                } catch (PDOException $e) {
+                    array_push($errors, $statement . " Failed:" . $e->getMessage());
+                }
+            }
+
+            if (count($errors) > 0) {
+
+                return $errors;
+            } else {
+                return true;
+            }
+        }
+
+        public function update_sql_20117(): bool|array
+        {
+
+            $errors = array();
+
+            $sql = [
+                "ALTER TABLE `zp_projects`
+                ADD COLUMN `parent` INT(11) NULL;"
+
             ];
 
             foreach ($sql as $statement) {

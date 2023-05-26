@@ -10,7 +10,7 @@ namespace leantime\domain\repositories {
     {
 
         private core\db $db;
-        
+
         /**
          * __construct - get database connection
          *
@@ -64,7 +64,7 @@ namespace leantime\domain\repositories {
 				FROM zp_canvas_items
 				LEFT JOIN zp_canvas ON zp_canvas.id = zp_canvas_items.canvasId
 				LEFT JOIN zp_user ON zp_canvas_items.author = zp_user.id
-				LEFT JOIN zp_tickets AS progressTickets ON progressTickets.dependingTicketId = zp_canvas_items.milestoneId AND progressTickets.type <> 'milestone' AND progressTickets.type <> 'subtask'
+				LEFT JOIN zp_tickets AS progressTickets ON progressTickets.milestoneid = zp_canvas_items.milestoneId AND progressTickets.type <> 'milestone' AND progressTickets.type <> 'subtask'
 			    LEFT JOIN zp_tickets AS milestone ON milestone.id = zp_canvas_items.milestoneId
 				WHERE zp_canvas.projectId = :projectId AND zp_canvas_items.box = 'article'";
 
@@ -345,5 +345,68 @@ namespace leantime\domain\repositories {
 
             $stmn->closeCursor();
         }
+
+        public function getNumberOfBoards($projectId = null)
+        {
+
+            $sql = "SELECT
+                        count(zp_canvas.id) AS boardCount
+                FROM
+                    zp_canvas
+                WHERE zp_canvas.type = 'wiki'";
+
+            if (!is_null($projectId)) {
+                $sql .= " AND zp_canvas.projectId = :projectId ";
+            }
+
+            $stmn = $this->db->database->prepare($sql);
+
+            if (!is_null($projectId)) {
+                $stmn->bindValue(':projectId', $projectId, PDO::PARAM_INT);
+            }
+
+            $stmn->execute();
+            $values = $stmn->fetch();
+            $stmn->closeCursor();
+
+            if (isset($values['boardCount'])) {
+                return $values['boardCount'];
+            }
+
+            return 0;
+        }
+
+        public function getNumberOfCanvasItems($projectId = null)
+        {
+
+            $sql = "SELECT
+                    count(zp_canvas_items.id) AS canvasCount
+                FROM
+                zp_canvas_items
+                LEFT JOIN zp_canvas AS canvasBoard ON zp_canvas_items.canvasId = canvasBoard.id
+                WHERE canvasBoard.type = 'wiki'  ";
+
+            if (!is_null($projectId)) {
+                $sql .= " AND canvasBoard.projectId = :projectId";
+            }
+
+            $stmn = $this->db->database->prepare($sql);
+
+            if (!is_null($projectId)) {
+                $stmn->bindValue(':projectId', $projectId, PDO::PARAM_INT);
+            }
+
+            $stmn->execute();
+            $values = $stmn->fetch();
+            $stmn->closeCursor();
+
+            if (isset($values['canvasCount']) === true) {
+                return $values['canvasCount'];
+            }
+
+            return 0;
+        }
+
+
     }
 }

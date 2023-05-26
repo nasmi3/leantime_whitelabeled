@@ -60,12 +60,12 @@ $elementName = 'goal';
                                                class="<?=$canvasName ?>CanvasModal"
                                                data="item_<?=$row['id'] ?>"><?php $this->e($row["description"]);?></a></h4>
                                         <br />
-                                        <?=$row["assumptions"] ?>
+                                        <?=$this->escape($row["assumptions"]) ?>
                                         <br />
 
                                         <?php
                                         if ($row["conclusion"] != 0 && is_numeric($row["data"]) && is_numeric($row["conclusion"])) {
-                                            $percentDone = $row["data"] / $row["conclusion"] * 100;
+                                            $percentDone = round($row["data"] / $row["conclusion"] * 100, 2);
                                         } else {
                                             $percentDone = 0;
                                         }

@@ -20,14 +20,14 @@ foreach ($this->get('allCanvas') as $canvasRow) {
         <h5><?php $this->e($_SESSION['currentProjectClient'] . " // " . $_SESSION['currentProjectName']); ?></h5>
         <?php if (count($allCanvas) > 0) {?>
             <span class="dropdown dropdownWrapper headerEditDropdown">
-        <a href="javascript:void(0)" class="dropdown-toggle btn btn-transparent" data-toggle="dropdown"><i class="fa-solid fa-ellipsis-v"></i></a>
-        <ul class="dropdown-menu editCanvasDropdown">
-            <?php if ($login::userIsAtLeast($roles::$editor)) { ?>
-                <li><a href="javascript:void(0)" class="editCanvasLink "><?=$this->__("links.icon.edit") ?></a></li>
-                <li><a href="<?=BASE_URL ?>/ideas/delCanvas/<?php echo $this->get('currentCanvas');?>" class="delete"><?php echo $this->__("links.icon.delete") ?></a></li>
-            <?php } ?>
-        </ul>
-        </span>
+                <a href="javascript:void(0)" class="dropdown-toggle btn btn-transparent" data-toggle="dropdown"><i class="fa-solid fa-ellipsis-v"></i></a>
+                <ul class="dropdown-menu editCanvasDropdown">
+                    <?php if ($login::userIsAtLeast($roles::$editor)) { ?>
+                        <li><a href="javascript:void(0)" class="editCanvasLink "><?=$this->__("links.icon.edit") ?></a></li>
+                        <li><a href="<?=BASE_URL ?>/ideas/delCanvas/<?php echo $this->get('currentCanvas');?>" class="delete"><?php echo $this->__("links.icon.delete") ?></a></li>
+                    <?php } ?>
+                </ul>
+            </span>
         <?php } ?>
         <h1><?php echo $this->__("headlines.ideas") ?>
             //
@@ -66,7 +66,7 @@ foreach ($this->get('allCanvas') as $canvasRow) {
             <div class="col-md-4">
                 <?php  if ($login::userIsAtLeast($roles::$editor)) { ?>
                     <?php if (count($this->get('allCanvas')) > 0) { ?>
-                        <a href="<?=BASE_URL ?>/ideas/ideaDialog?type=idea" class="ideaModal  btn btn-primary" id="customersegment"><span
+                        <a href="<?=BASE_URL ?>/ideas/showBoards/#/ideas/ideaDialog?type=idea" class="btn btn-primary" id="customersegment"><span
                                     class="far fa-lightbulb"></span><?php echo $this->__("buttons.add_idea") ?></a>
                     <?php } ?>
                 <?php } ?>
@@ -113,18 +113,27 @@ foreach ($this->get('allCanvas') as $canvasRow) {
                                         &nbsp;&nbsp;&nbsp;
                                         <ul class="dropdown-menu">
                                             <li class="nav-header"><?php echo $this->__("subtitles.edit"); ?></li>
-                                            <li><a href="<?=BASE_URL ?>/ideas/ideaDialog/<?php echo $row["id"];?>" class="ideaModal" data="item_<?php echo $row["id"];?>"> <?php echo $this->__("links.edit_canvas_item"); ?></a></li>
-                                            <li><a href="<?=BASE_URL ?>/ideas/delCanvasItem/<?php echo $row["id"]; ?>" class="delete ideaModal" data="item_<?php echo $row["id"];?>"> <?php echo $this->__("links.delete_canvas_item"); ?></a></li>
+                                            <li><a href="<?=BASE_URL ?>/ideas/showBoards/#/ideas/ideaDialog/<?php echo $row["id"];?>" class="" data="item_<?php echo $row["id"];?>"> <?php echo $this->__("links.edit_canvas_item"); ?></a></li>
+                                            <li><a href="<?=BASE_URL ?>/ideas/showBoards/#/ideas/delCanvasItem/<?php echo $row["id"]; ?>" class="delete" data="item_<?php echo $row["id"];?>"> <?php echo $this->__("links.delete_canvas_item"); ?></a></li>
 
                                         </ul>
                                     </div>
                                <?php } ?>
 
-                                <h4><a href="<?=BASE_URL ?>/ideas/ideaDialog/<?php echo $row["id"]; ?>" class="ideaModal"
+                                <h4><a href="<?=BASE_URL ?>/ideas/showBoards/#/ideas/ideaDialog/<?php echo $row["id"]; ?>"
                                        data="item_<?php echo $row["id"]; ?>"><?php $this->e($row["description"]); ?></a></h4>
 
                                 <div class="mainIdeaContent">
-                                    <?=$this->escapeMinimal($row["data"]) ?>
+                                    <div class="kanbanCardContent">
+
+                                        <div class="kanbanContent" style="margin-bottom: 20px">
+                                            <?=$this->escapeMinimal($row["data"]) ?>
+                                        </div>
+
+
+                                    </div>
+
+
                                 </div>
 
                                 <div class="clearfix" style="padding-bottom: 8px;"></div>
@@ -173,8 +182,8 @@ foreach ($this->get('allCanvas') as $canvasRow) {
 
                                 <div class="pull-right" style="margin-right:10px;">
 
-                                    <a href="<?=BASE_URL ?>/ideas/ideaDialog/<?php echo $row["id"]; ?>"
-                                       class="ideaModal" data="item_<?=$row['id'] ?>"
+                                    <a href="<?=BASE_URL ?>/ideas/showBoards/#/ideas/ideaDialog/<?php echo $row["id"]; ?>"
+                                       class="" data="item_<?=$row['id'] ?>"
                                         <?php echo $row['commentCount'] == 0 ? 'style="color: grey;"' : '' ?>>
                                         <span class="fas fa-comments"></span></a> <small><?=$row['commentCount'] ?></small>
 

@@ -381,7 +381,7 @@ a, a:hover, a:link, a:active, a:focus {
 body a:hover {
     text-decoration: none;
     color:var(--primary-font-color);
-    transition: color 0.25s;
+
 }
 
 label, input, textarea, select, button {
@@ -969,9 +969,7 @@ a .label-default:after, a .label-primary:after {
 /*** LEFT ***/
 
 
-.chzn-container-single .chzn-search input {
-    width:95% !important;
-}
+
 
 
 /*** MAIN PANEL ***/
@@ -2376,10 +2374,10 @@ ul.list-inline li {
 .tab-primary.ui-tabs .ui-tabs-nav li,
 .tab-primary.ui-tabs .ui-tabs-nav li a,
 .sortableTicketList li,
-.sortableTicketList li .ticketBox{
-    -moz-transition: all 0.2s ease-out 0s;
-    -webkit-transition: all 0.2s ease-out 0s;
-    transition: all 0.2s ease-out 0s;
+.sortableTicketList li .ticketBox {
+    -moz-transition: all 0.2s ease-in-out 0s;
+    -webkit-transition: all 0.2s ease-in-out 0s;
+    transition: all 0.2s ease-in-out 0s;
 }
 
 /*** BOOTSTRAP OVERRIDE ***/
@@ -2779,10 +2777,10 @@ input[type="search"], input[type="tel"], input[type="color"], .uneditable-input,
 }
 
 .label {
-    -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
-    border-radius: 3px;
-    font-size: 10px;
+    -moz-border-radius: var(--box-radius-small);
+    -webkit-border-radius: var(--box-radius-small);
+    border-radius:  var(--box-radius-small);
+    font-size: var(--font-size-xs);
     text-shadow: none;
     font-weight: normal;
     text-transform: uppercase;
@@ -3392,10 +3390,6 @@ body .widgettitle .editHeadline:hover {
 .showDialogOnLoad {
 }
 
-.chzn-container-single .chzn-search input {
-    width:95% !important;
-}
-
 .inlineDropDownContainer {
     float:right;
     position:relative;
@@ -3462,7 +3456,7 @@ body .widgettitle .editHeadline:hover {
 }
 
 .commentMain {
-    width:calc(100% - 40px);
+    width:calc(100% - 50px);
     margin-bottom:10px;
     float:left;
 }
@@ -3508,8 +3502,8 @@ body .widgettitle .editHeadline:hover {
 
 .commentImage img {
     border-radius:50%;
-    width:30px;
-    height:30px;
+    width:38px;
+    height:38px;
     border:1px solid var(--main-border-color);
 }
 .commentLinks {
@@ -3536,7 +3530,7 @@ body .widgettitle .editHeadline:hover {
 }
 
 .commentReply {
-    width:calc(100% - 40px);
+    width:calc(100% - 50px);
     float:left;
 }
 
@@ -3549,19 +3543,19 @@ body .widgettitle .editHeadline:hover {
     clear:both;
 }
 
-.maincontent .chzn-container .chzn-results li {
+.maincontent .chosen-container .chosen-results li {
     margin-bottom:2px;
     list-style-type:none;
     padding:5px;
 }
 
-.maincontent .chzn-container .chzn-results li span,
-.maincontent .chzn-container .chzn-single span{
+.maincontent .chosen-container .chosen-results li span,
+.maincontent .chosen-container .chosen-single span{
     margin-left:0px !important;
 }
 
-.maincontent .chzn-container .chzn-results li span:after,
-.maincontent .chzn-container .chzn-single span:after{
+.maincontent .chosen-container .chosen-results li span:after,
+.maincontent .chosen-container .chosen-single span:after{
     border-color:transparent;
 }
 
@@ -3581,9 +3575,17 @@ body .widgettitle .editHeadline:hover {
     margin-bottom:10px;
 }
 
+.articleHeadline .far {
+
+}
+
 .articleMeta {
     font-style: italic;
-    margin-bottom:15px;
+    margin-bottom:25px;
+}
+
+.articleMeta .metaContent {
+    opacity:0.7;
 }
 
 .articleMeta .tagsinput.readonly {
@@ -3591,11 +3593,17 @@ body .widgettitle .editHeadline:hover {
     height:auto !important;
     margin: 0px 0px;
     vertical-align: middle;
+    color:var(--primary-font-color);
+    opacity:0.7;
 }
 
 .articleMeta div.tagsinput.readonly span.tag {
     margin:0px 5px;
     margin-left:0px;
+    padding:0px;
+    background:none;
+    color:var(--primary-font-color);
+    opacity:0.7;
 }
 
 .articleBody {
@@ -3759,6 +3767,22 @@ a.titleInsertLink:hover {
     padding-left:10px;
 }
 
+.projectBox .projectAvatar,
+.ticketBox .projectAvatar{
+    width:50px;
+    height:50px;
+    float:left;
+    margin-right:10px;
+    border-radius:var(--box-radius-small);
+    background:var(--neutral);
+}
+
+.projectBox .projectAvatar img,
+.ticketBox .projectAvatar img{
+    width:50px;
+    border-radius:var(--box-radius-small);
+}
+
 .stickyColumn {
     position:sticky;
     top:60px
@@ -3811,4 +3835,11 @@ h3.todaysDate {
     min-height:600px;
 }
 
+.stickyRow {
+    position: sticky;
+    top: 65px;
+}
 
+.subtaskLineLink {
+    cursor:pointer;
+}

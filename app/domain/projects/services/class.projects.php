@@ -351,6 +351,10 @@ namespace leantime\domain\services {
         public function changeCurrentSessionProject($projectId)
         {
 
+            if(isset($_SESSION["currentProjectName"]) === false){
+                $_SESSION["currentProjectName"] = '';
+            }
+
             if ($this->isUserAssignedToProject($_SESSION['userdata']['id'], $projectId) === true) {
                 //Get user project role
 
@@ -398,6 +402,23 @@ namespace leantime\domain\services {
                     $_SESSION['currentSMCanvas'] = "";
                     $_SESSION['currentRETROSCanvas'] = "";
                     $this->settingsRepo->saveSetting("usersettings." . $_SESSION['userdata']['id'] . ".lastProject", $_SESSION["currentProject"]);
+
+
+                    $recentProjects =  $this->settingsRepo->getSetting("usersettings." . $_SESSION['userdata']['id'] . ".recentProjects");
+                    $recent = unserialize($recentProjects);
+
+                    if(is_array($recent) === false) {
+                        $recent = array();
+                    }
+                    $key = array_search($_SESSION["currentProject"], $recent);
+                    if ($key !== false) {
+                        unset($recent[$key]);
+                    }
+                    array_unshift($recent, $_SESSION["currentProject"]);
+
+                    $recent = array_slice($recent, 0, 20);
+
+                    $this->settingsRepo->saveSetting("usersettings." . $_SESSION['userdata']['id'] . ".recentProjects", serialize($recent));
 
                     unset($_SESSION["projectsettings"]);
 
@@ -535,7 +556,7 @@ namespace leantime\domain\services {
 
             //Iterate through root tickets first
             foreach ($allTickets as $ticket) {
-                if ($ticket->dependingTicketId == 0 || $ticket->dependingTicketId == "" || $ticket->dependingTicketId == null) {
+                if ($ticket->milestoneid == 0 || $ticket->milestoneid == "" || $ticket->milestoneid == null) {
                     $dateToFinishValue = "";
                     if ($ticket->dateToFinish != null && $ticket->dateToFinish != "" && $ticket->dateToFinish != "0000-00-00 00:00:00" && $ticket->dateToFinish != "1969-12-31 00:00:00") {
                         $dateToFinish = new DateTime($ticket->dateToFinish);
@@ -577,6 +598,7 @@ namespace leantime\domain\services {
                         'editFrom' => $editFromValue,
                         'editTo' => $editToValue,
                         'dependingTicketId' => "",
+                        'milestoneid' => ''
                     );
 
                     $newTicketId = $this->ticketRepository->addTicket($ticketValues);
@@ -587,7 +609,7 @@ namespace leantime\domain\services {
 
             //Iterate through childObjects
             foreach ($allTickets as $ticket) {
-                if ($ticket->dependingTicketId != "" && $ticket->dependingTicketId > 0) {
+                if ($ticket->milestoneid != "" && $ticket->milestoneid > 0) {
                     $dateToFinishValue = "";
                     if ($ticket->dateToFinish != null && $ticket->dateToFinish != "" && $ticket->dateToFinish != "0000-00-00 00:00:00" && $ticket->dateToFinish != "1969-12-31 00:00:00") {
                         $dateToFinish = new DateTime($ticket->dateToFinish);
@@ -628,7 +650,7 @@ namespace leantime\domain\services {
                         'tags' => $ticket->tags,
                         'editFrom' => $editFromValue,
                         'editTo' => $editToValue,
-                        'dependingTicketId' => $ticketIdList[$ticket->dependingTicketId],
+                        'milestoneid' => $ticketIdList[$ticket->milestoneid],
                     );
 
                     $newTicketId = $this->ticketRepository->addTicket($ticketValues);
@@ -661,9 +683,9 @@ namespace leantime\domain\services {
 
                 if ($canvasItems != false && count($canvasItems) > 0) {
                     foreach ($canvasItems as $item) {
-                        $milestoneId = "";
-                        if (isset($ticketIdList[$item['milestoneId']])) {
-                            $milestoneId = $ticketIdList[$item['milestoneId']];
+                        $milestoneid = "";
+                        if (isset($ticketIdList[$item['milestoneid']])) {
+                            $milestoneid = $ticketIdList[$item['milestoneid']];
                         }
 
                         $canvasItemValues = array(
@@ -679,7 +701,7 @@ namespace leantime\domain\services {
                             "canvasId" => $newCanvasId,
                             "sortindex" => $item['sortindex'],
                             "status" => $item['status'],
-                            "milestoneId" => $milestoneId
+                            "milestoneId" => $milestoneid
                         );
 
                         $leancanvasRepo->addCanvasItem($canvasItemValues);
@@ -707,8 +729,8 @@ namespace leantime\domain\services {
                 if ($canvasItems != false && count($canvasItems) > 0) {
                     foreach ($canvasItems as $item) {
                         $milestoneId = "";
-                        if (isset($ticketIdList[$item['milestoneId']])) {
-                            $milestoneId = $ticketIdList[$item['milestoneId']];
+                        if (isset($ticketIdList[$item['milestoneid']])) {
+                            $milestoneId = $ticketIdList[$item['milestoneid']];
                         }
 
                         $canvasItemValues = array(
@@ -742,6 +764,54 @@ namespace leantime\domain\services {
         {
             return $this->projectRepository->patch($id, $params);
         }
+
+        public function getProjectAvatar($id)
+        {
+            return $this->projectRepository->getProjectAvatar($id);
+        }
+
+        public function setProjectAvatar($file, $project) {
+            return $this->projectRepository->setPicture($file, $project);
+        }
+
+        public function getProjectSetupChecklist($projectId) {
+
+            $progressSteps = array(
+                "define" => array(
+                    "title"=>"label.define",
+                    "tasks" => array(
+                        array("title"=>"description", "status"=>""),
+                        array("title"=>"defineTeam", "status"=>""),
+                        array("title"=>"createBlueprint", "status"=>""),
+                        array("title"=>"", "status"=>""),
+
+                    )
+                ),
+                "goals" => array(
+                    "title"=>"label.setGoals",
+                    "tasks" => array(
+                        array("title"=>"Set goals", "status"=>""),
+                    )
+                ),
+                "timeline" => array(
+                    "title"=>"label.setTimeline",
+                    "tasks" => array(
+                        array("title"=>"createMilestones", "status"=>""),
+                        array("title"=>"connectWithGoals", "status"=>""),
+                    )
+                ),
+                "implementation" => array(
+                    "title"=>"label.implementation",
+                    "tasks" => array(
+                        array("title"=>"createTasks", "status"=>""),
+                        array("title"=>"assignTasks", "status"=>""),
+                        array("title"=>"finish80percent", "status"=>""),
+                    )
+                )
+            );
+
+        }
+
     }
 
 }

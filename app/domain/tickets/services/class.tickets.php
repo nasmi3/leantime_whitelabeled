@@ -36,10 +36,10 @@ namespace leantime\domain\services {
          * @access public
          * @return array
          */
-        public function getStatusLabels(): array
+        public function getStatusLabels($projectId = null): array
         {
 
-            return $this->ticketRepository->getStateLabels();
+            return $this->ticketRepository->getStateLabels($projectId);
         }
 
         /**
@@ -256,7 +256,17 @@ namespace leantime\domain\services {
         public function getAll($searchCriteria)
         {
 
-            return $this->ticketRepository->getAllBySearchCriteria($searchCriteria, $searchCriteria['orderBy']);
+            return $this->ticketRepository->getAllBySearchCriteria($searchCriteria, $searchCriteria['orderBy'] ?? 'date');
+        }
+
+        public function getAllPossibleParents(models\tickets $ticket, $projectId = 'currentProject') {
+
+            if($projectId == 'currentProject') {
+                $projectId = $_SESSION['currentProject'];
+            }
+
+            return $this->ticketRepository->getAllPossibleParents($ticket, $projectId);
+
         }
 
         public function getTicket($id)
@@ -286,10 +296,15 @@ namespace leantime\domain\services {
             return false;
         }
 
-        public function getOpenUserTicketsThisWeekAndLater($userId, $projectId)
+        public function getOpenUserTicketsThisWeekAndLater($userId, $projectId, $includeDoneTickets = false)
         {
 
-            $searchCriteria = $this->prepareTicketSearchArray(array("currentProject" => $projectId, "currentUser"=> $userId, "users" => $userId, "status" => "not_done", "sprint" => ""));
+            if($includeDoneTickets === true){
+                $searchStatus = "all";
+            }else{
+                $searchStatus = "not_done";
+            }
+            $searchCriteria = $this->prepareTicketSearchArray(array("currentProject" => $projectId, "currentUser"=> $userId, "users" => $userId, "status" => $searchStatus, "sprint" => ""));
             $allTickets = $this->ticketRepository->getAllBySearchCriteria($searchCriteria, "duedate");
 
             $statusLabels = $this->getAllStatusLabelsByUserId($userId);
@@ -305,7 +320,7 @@ namespace leantime\domain\services {
                 }
 
                 //There is a chance that the status was removed after it was assigned to a ticket
-                if (isset($statusLabels[$row['projectId']][$row['status']]) && $statusLabels[$row['projectId']][$row['status']]['statusType'] != "DONE") {
+                if (isset($statusLabels[$row['projectId']][$row['status']]) && ($statusLabels[$row['projectId']][$row['status']]['statusType'] != "DONE" || $includeDoneTickets === true)) {
                     if ($row['dateToFinish'] == "0000-00-00 00:00:00" || $row['dateToFinish'] == "1969-12-31 00:00:00") {
                         if (isset($tickets["later"]["tickets"])) {
                             $tickets["later"]["tickets"][] = $row;
@@ -457,7 +472,8 @@ namespace leantime\domain\services {
                 'tags' => '',
                 'editFrom' => '',
                 'editTo' => '',
-                'dependingTicketId' => isset($params['milestone']) ? (int) $params['milestone'] : ""
+                'milestoneid' => isset($params['milestone']) ? (int) $params['milestone'] : "",
+                'dependingTicketId' => ''
             );
 
             if ($values['headline'] == "") {
@@ -512,7 +528,8 @@ namespace leantime\domain\services {
                 'planHours' => '',
                 'sprint' => '',
                 'priority' => 3,
-                'dependingTicketId' => $params['dependentMilestone'],
+                'dependingTicketId' => '',
+                'milestoneid' => $params['dependentMilestone'] ?? '',
                 'acceptanceCriteria' => '',
                 'tags' => $params['tags'],
                 'editFrom' => $this->language->getISODateString($params['editFrom']),
@@ -554,7 +571,8 @@ namespace leantime\domain\services {
                 'timeFrom' => $values['timeFrom'],
                 'editTo' => $values['editTo'],
                 'timeTo' => $values['timeTo'],
-                'dependingTicketId' => $values['dependingTicketId']
+                'dependingTicketId' => $values['dependingTicketId'],
+                'milestoneid' => $values['milestoneid'],
             );
 
             if (!$this->projectService->isUserAssignedToProject($_SESSION['userdata']['id'], $values['projectId'])) {
@@ -642,7 +660,8 @@ namespace leantime\domain\services {
                 'timeFrom' => $values['timeFrom'],
                 'editTo' => $values['editTo'],
                 'timeTo' => $values['timeTo'],
-                'dependingTicketId' => $values['dependingTicketId']
+                'dependingTicketId' => $values['dependingTicketId'],
+                'milestoneid' => $values['milestoneid'],
             );
 
             if (!$this->projectService->isUserAssignedToProject($_SESSION['userdata']['id'], $values['projectId'])) {
@@ -738,7 +757,7 @@ namespace leantime\domain\services {
                 }
 
                 //Update ticket
-                return $this->patchTicket($ticket->id, ["projectId" => $projectId, "sprint" => "", "dependingTicketId" => ""]);
+                return $this->patchTicket($ticket->id, ["projectId" => $projectId, "sprint" => "", "dependingTicketId" => "", 'milestoneid' => '']);
 
 
             }
@@ -766,7 +785,8 @@ namespace leantime\domain\services {
                 'sprint' => '',
                 'acceptanceCriteria' => '',
                 'priority' => 3,
-                'dependingTicketId' => $params['dependentMilestone'],
+                'dependingTicketId' => '',
+                'milestoneid' => $params['dependentMilestone'],
                 'tags' => $params['tags'],
                 'editFrom' => $this->language->getISODateString($params['editFrom']),
                 'editTo' => $this->language->getISODateString($params['editTo'])
@@ -806,6 +826,7 @@ namespace leantime\domain\services {
                 'editFrom' => "",
                 'editTo' => "",
                 'dependingTicketId' => $parentTicket->id,
+                'milestoneid' => $parentTicket->milestoneid
             );
 
             if ($subtaskId == "new" || $subtaskId == "") {

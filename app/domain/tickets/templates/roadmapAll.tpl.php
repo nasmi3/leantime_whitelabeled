@@ -23,10 +23,10 @@ if (isset($_SESSION['userdata']['settings']['views']['roadmap'])) {
 }
 ?>
 <div class="pageheader">
-    <div class="pageicon"><span class="fa fa-sliders"></span></div>
+    <div class="pageicon"><span class="fa fa-briefcase"></span></div>
     <div class="pagetitle">
         <h5><?php $this->e($_SESSION['currentProjectClient'] . " // " . $_SESSION['currentProjectName']); ?></h5>
-        <h1><?=$this->__("label.all_milestones"); ?></h1>
+        <h1><?=$this->__("label.all_milestones_portfolio"); ?></h1>
     </div>
 </div><!--pageheader-->
 
@@ -77,10 +77,11 @@ if (isset($_SESSION['userdata']['settings']['views']['roadmap'])) {
                     </div>
 
                     <div class="btn-group viewDropDown">
-                        <button class="btn dropdown-toggle" data-toggle="dropdown"><?=$this->__("links.gantt_view") ?> <?=$this->__("links.view") ?></button>
+                        <button class="btn dropdown-toggle" type="button" data-toggle="dropdown" data-tippy-content="<?=$this->__("popover.view") ?>"><i class=" fas fa-columns"></i></button>
                         <ul class="dropdown-menu">
-                            <li><a href="<?=BASE_URL ?>/tickets/roadmapAll" class="active"><?=$this->__("links.gantt_view") ?></a></li>
-                            <li><a href="<?=BASE_URL ?>/tickets/showAllMilestonesOverview" ><?=$this->__("links.table") ?></a></li>
+                            <li class="active"><a href="<?=BASE_URL ?>/tickets/roadmapAll"><?=$this->__("menu.milestone_gantt") ?></a></li>
+                            <li><a href="<?=BASE_URL ?>/projects/showMy"><?=$this->__("menu.card_view") ?></a></li>
+                            <li><a href="<?=BASE_URL ?>/tickets/showAllMilestonesOverview"><?=$this->__("menu.table_view") ?></a></li>
                         </ul>
                     </div>
 
@@ -161,6 +162,15 @@ if (isset($_SESSION['userdata']['settings']['views']['roadmap'])) {
                     $sortIndex = $mlst->sortIndex;
                 }
 
+                $dependencyList = array();
+                if($mlst->milestoneid != 0){
+                    $dependencyList[] = $mlst->milestoneid;
+                }
+
+                if($mlst->dependingTicketId != 0) {
+                    $dependencyList[] = $mlst->dependingTicketId;
+                }
+
                 echo"{
                     projectName :'" . $mlst->projectName . "',
                     id :'" . $mlst->id . "',
@@ -168,7 +178,7 @@ if (isset($_SESSION['userdata']['settings']['views']['roadmap'])) {
                     start :'" . (($mlst->editFrom != '0000-00-00 00:00:00' && substr($mlst->editFrom, 0, 10) != '1969-12-31') ? $mlst->editFrom :  date('Y-m-d', strtotime("+1 day", time()))) . "',
                     end :'" . (($mlst->editTo != '0000-00-00 00:00:00' && substr($mlst->editTo, 0, 10) != '1969-12-31') ? $mlst->editTo :  date('Y-m-d', strtotime("+1 week", time()))) . "',
                     progress :'" . $mlst->percentDone . "',
-                    dependencies :'" . ($mlst->dependingTicketId != 0 ? $mlst->dependingTicketId : '') . "',
+                    dependencies :'" . implode(",", $dependencyList) . "',
                     custom_class :'',
                     type: '" . strtolower($mlst->type) . "',
                     bg_color: '" . $color . "',

@@ -52,17 +52,19 @@ foreach ($this->get('allSubTasks') as $subticket) {
             <div class="row">
                 <div class="col-md-12" style="padding:0 15px;">
                     <?php if ($login::userIsAtLeast($roles::$editor)) {  ?>
-                        <div class="inlineDropDownContainer">
+                        <div class="inlineDropDownContainer" >
                             <a href="javascript:void(0)" class="dropdown-toggle ticketDropDown" data-toggle="dropdown">
                                 <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a href="<?=BASE_URL ?>/tickets/showTicket/<?=$ticket->id ?>?delSubtask=<?php echo $subticket["id"]; ?>" class="delete modal"><i class="fa fa-trash"></i> <?php echo $this->__("links.delete_todo"); ?></a></li>
+                                <li><a href="<?=BASE_URL ?>/tickets/showTicket/<?=$ticket->id ?>?delSubtask=<?php echo $subticket["id"]; ?>" class="delete formModal"><i class="fa fa-trash"></i> <?php echo $this->__("links.delete_todo"); ?></a></li>
 
                             </ul>
                         </div>
                     <?php } ?>
-                    <input type="text" name="subtaskheadline" value="<?=$subticket['headline']?>" data-label="headline-<?=$subticket['id']?>" class="asyncInputUpdate"/>
+
+                    <a href="<?=$_SESSION['lastPage']?>#/tickets/showTicket/<?=$subticket['id']?>"><?=$this->escape($subticket['headline'])?></a>
+
                 </div>
             </div>
             <div class="row">
@@ -102,10 +104,20 @@ foreach ($this->get('allSubTasks') as $subticket) {
                             </ul>
                         </div>
 
+                        <?php
+
+                        if(isset($statusLabels[$subticket['status']])){
+                            $class=$statusLabels[$subticket['status']]["class"];
+                            $name=$statusLabels[$subticket['status']]["name"];
+                        }else{
+                            $class = 'label-important';
+                            $name = 'new';
+                        }
+                        ?>
                         <div class="dropdown ticketDropdown statusDropdown colorized show">
-                            <a class="dropdown-toggle f-left status <?=$statusLabels[$subticket['status']]["class"]?>" href="javascript:void(0);" role="button" id="statusDropdownMenuLink<?=$subticket['id']?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <a class="dropdown-toggle f-left status <?=$class ?>" href="javascript:void(0);" role="button" id="statusDropdownMenuLink<?=$subticket['id']?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                                 <span class="text"><?php
-                                                                    echo $statusLabels[$subticket['status']]["name"];
+                                                                    echo $name;
                                                                 ?>
                                                                 </span>
                                 &nbsp;<i class="fa fa-caret-down" aria-hidden="true"></i>

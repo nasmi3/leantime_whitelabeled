@@ -17,7 +17,7 @@
     <div class="pageicon"><span class="fa fa-home"></span></div>
     <div class="pagetitle">
         <?php if (count($this->get('allUsers')) == 1) {?>
-            <a href="<?=BASE_URL ?>/users/newUser/" class="headerCTA">
+            <a href="<?=BASE_URL ?>/dashboard/show/#/users/newUser/" class="headerCTA">
                 <i class="fa fa-users"></i>
                 <span style="font-size:14px; line-height:25px;">
                     <?php echo $this->__("links.dont_do_it_alone"); ?>
@@ -39,13 +39,18 @@
 
             <div class="col-md-8">
                 <div class="maincontentinner">
+
                     <div class="pull-right dropdownWrapper">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="<?=BASE_URL?>/project/changeCurrentProject/<?=$project['id']; ?>"><i class="fa fa-link"></i></a>
+                        <a class="dropdown-toggle btn" data-toggle="dropdown" data-tippy-content="<?=$this->__('label.copy_url_tooltip') ?>" href="<?=BASE_URL?>/project/changeCurrentProject/<?=$project['id']; ?>"><i class="fa fa-link"></i></a>
                         <div class="dropdown-menu padding-md">
                             <input type="text" id="projectUrl" value="<?=BASE_URL?>/projects/changeCurrentProject/<?=$project['id']; ?>" />
                             <button class="btn btn-primary" onclick="leantime.generalController.copyUrl('projectUrl');"><?=$this->__('links.copy_url') ?></button>
                         </div>
                     </div>
+
+                    <a href="javascript:void(0);" id="favoriteProject" class="btn pull-right margin-right <?=$this->get("isFavorite") ? 'isFavorite' : '' ?>" style="margin-right:5px;" data-tippy-content="<?=$this->__('label.favorite_tooltip') ?>">
+                        <i class="<?=$this->get("isFavorite") ? 'fa-solid' : 'fa-regular' ?> fa-star"></i>
+                    </a>
                     <h3><?php $this->e($_SESSION["currentProjectClient"]); ?></h3>
                     <h1 class="articleHeadline"><?php $this->e($this->get('currentProjectName')); ?></h1>
                     <?=$this->escapeMinimal($project['details']) ?>
@@ -74,8 +79,10 @@
                                 <div class="ticketBox fixed priority-border-<?=$row['priority']?>" data-val="<?php echo $row['id']; ?>">
                                     <div class="row">
                                         <div class="col-md-12 timerContainer" style="padding:5px 15px;" id="timerContainer-<?php echo $row['id'];?>">
-                                            <link rel="preload" href="<?=BASE_URL ?>/tickets/showTicket/<?php echo $row['id'];?>" as="fetch" crossorigin="">
-                                            <strong><a class='ticketModal' href="<?=BASE_URL ?>/tickets/showTicket/<?php echo $row['id'];?>" ><?php $this->e($row['headline']); ?></a></strong>
+                                            <?php if($row['dependingTicketId'] > 0){ ?>
+                                                <a href="<?=BASE_URL?>/#/tickets/showTicket/<?=$row['dependingTicketId'] ?>"><?=$this->escape($row['parentHeadline']) ?></a> //
+                                            <?php } ?>
+                                            <strong><a href="<?=BASE_URL ?>/#/tickets/showTicket/<?php echo $row['id'];?>" ><?php $this->e($row['headline']); ?></a></strong>
 
                                             <?php if ($login::userIsAtLeast($roles::$editor)) {
                                                 $clockedIn = $this->get("onTheClock");
@@ -144,7 +151,7 @@
                                                 <div class="dropdown ticketDropdown milestoneDropdown colorized show">
                                                     <a style="background-color:<?=$this->escape($row['milestoneColor'])?>" class="dropdown-toggle f-left  label-default milestone" href="javascript:void(0);" role="button" id="milestoneDropdownMenuLink<?=$row['id']?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                                 <span class="text"><?php
-                                                                if ($row['dependingTicketId'] != "" && $row['dependingTicketId'] != 0) {
+                                                                if ($row['milestoneid'] != "" && $row['milestoneid'] != 0) {
                                                                     $this->e($row['milestoneHeadline']);
                                                                 } else {
                                                                     echo $this->__("label.no_milestone");
@@ -256,7 +263,7 @@
                 <div class="maincontentinner">
                     <div class="pull-right">
                         <?php if ($login::userIsAtLeast($roles::$editor)) { ?>
-                        <a href="javascript:void(0);" onclick="toggleCommentBoxes(0)" id="mainToggler">
+                        <a href="javascript:void(0);" onclick="toggleCommentBoxes(0); jQuery('.noCommentsMessage').toggle();" id="mainToggler">
                             <span class="fa fa-plus-square"></span> <?php echo $this->__('links.add_new_report') ?>
                         </a>
                         <?php } ?>
@@ -287,15 +294,15 @@
                                 <div id="comment0" class="commentBox" style="display:none;">
                                     <label for="projectStatus" style="display:inline"><?=$this->__('label.project_status_is') ?></label>
                                     <select name="status" id="projectStatus" style="margin-left: 0px; margin-bottom:10px;">
-                                        <option value="green"><?=$this->__('label.green') ?></option>
-                                        <option value="yellow"><?=$this->__('label.yellow') ?></option>
-                                        <option value="red"><?=$this->__('label.red') ?></option>
+                                        <option value="green"><?=$this->__('label.project_status_green') ?></option>
+                                        <option value="yellow"><?=$this->__('label.project_status_yellow') ?></option>
+                                        <option value="red"><?=$this->__('label.project_status_red') ?></option>
                                     </select>
                                     <div class="commentReply">
 
                                         <textarea rows="5" cols="50" class="tinymceSimple" name="text" style="width:100%;"></textarea>
                                         <input type="submit" value="<?php echo $this->__('buttons.save') ?>" name="comment" class="btn btn-primary btn-success" style="margin-left: 0px;"/>
-                                        <a href="javascript:void(0)" onclick="toggleCommentBoxes(-1)" style="line-height: 50px;"><?=$this->__('links.cancel');?></a>
+                                        <a href="javascript:void(0)" onclick="toggleCommentBoxes(-1); jQuery('.noCommentsMessage').toggle();" style="line-height: 50px;"><?=$this->__('links.cancel');?></a>
 
                                     </div>
                                     <input type="hidden" name="comment" value="1"/>
@@ -430,7 +437,7 @@
                             </div>
 
                             <?php if (count($this->get('comments')) == 0) { ?>
-                                <div style="padding-left:0px;">
+                                <div style="padding-left:0px; clear:both;" class="noCommentsMessage">
                                     <?php echo $this->__('text.no_updates') ?>
                                 </div>
                             <?php } ?>
@@ -568,65 +575,22 @@
 
         leantime.dashboardController.initProgressChart("chart-area", <?php echo round($projectProgress['percent']); ?>, <?php echo round((100 - $projectProgress['percent'])); ?>);
 
-        <?php if ($sprintBurndown != []) { ?>
-            //leantime.dashboardController.initBurndown([<?php foreach ($sprintBurndown as $value) {
-                echo "'" . $value['date'] . "',";
-                                                         } ?>], [<?php foreach ($sprintBurndown as $value) {
-                                                         echo "'" . round($value['plannedNum'], 2) . "',";
-                                                         } ?>], [ <?php foreach ($sprintBurndown as $value) {
-    if ($value['actualNum'] !== '') {
-        echo "'" . $value['actualNum'] . "',";
-    }
-                                                         }  ?> ]);
-            leantime.dashboardController.initChartButtonClick('HourlyChartButton', [<?php foreach ($sprintBurndown as $value) {
-                echo "'" . $value['plannedHours'] . "',";
-                                                                                    } ?>], [ <?php foreach ($sprintBurndown as $value) {
-    if ($value['actualHours'] !== '') {
-        echo "'" . round($value['actualHours']) . "',";
-    }
-                                                                                    }  ?> ]);
-            leantime.dashboardController.initChartButtonClick('EffortChartButton', [<?php foreach ($sprintBurndown as $value) {
-                echo "'" . $value['plannedEffort'] . "',";
-                                                                                    } ?>], [ <?php foreach ($sprintBurndown as $value) {
-    if ($value['actualEffort'] !== '') {
-        echo "'" . $value['actualEffort'] . "',";
-    }
-                                                                                    }  ?> ]);
-            leantime.dashboardController.initChartButtonClick('NumChartButton', [<?php foreach ($sprintBurndown as $value) {
-                echo "'" . $value['plannedNum'] . "',";
-                                                                                 } ?>], [ <?php foreach ($sprintBurndown as $value) {
-    if ($value['actualNum'] !== '') {
-        echo "'" . $value['actualNum'] . "',";
-    }
-                                                                                 }  ?> ]);
+        jQuery("#favoriteProject").click(function() {
 
-        <?php } ?>
+            if(jQuery("#favoriteProject").hasClass("isFavorite")) {
+                leantime.reactionsController.removeReaction('project', <?=$project['id']; ?>, 'favorite', function(){
+                    jQuery("#favoriteProject").find("i").removeClass("fa-solid").addClass("fa-regular");
+                    jQuery("#favoriteProject").removeClass("isFavorite");
+                });
+            }else{
+                leantime.reactionsController.addReactions('project', <?=$project['id']; ?>, 'favorite', function(){
+                    jQuery("#favoriteProject").find("i").removeClass("fa-regular").addClass("fa-solid");
+                    jQuery("#favoriteProject").addClass("isFavorite");
+                });
+            }
 
-        <?php if ($backlogBurndown != []) { ?>
-            //leantime.dashboardController.initBacklogBurndown([<?php foreach ($backlogBurndown as $value) {
-                echo "'" . $value['date'] . "',";
-                                                                } ?>], [ <?php foreach ($backlogBurndown as $value) {
-    if ($value['actualNum'] !== '') {
-        echo "'" . $value['actualNum'] . "',";
-    }
-                                                                }  ?> ]);
-            //leantime.dashboardController.initBacklogChartButtonClick('HourlyChartButton', [ <?php foreach ($backlogBurndown as $value) {
-                if ($value['actualHours'] !== '') {
-                    echo "'" . round($value['actualHours']) . "',";
-                }
-                                                                                              }  ?> ]);
-            //leantime.dashboardController.initBacklogChartButtonClick('EffortChartButton', [ <?php foreach ($backlogBurndown as $value) {
-                if ($value['actualEffort'] !== '') {
-                    echo "'" . $value['actualEffort'] . "',";
-                }
-                                                                                              }  ?> ]);
-            //leantime.dashboardController.initBacklogChartButtonClick('NumChartButton', [ <?php foreach ($backlogBurndown as $value) {
-                if ($value['actualNum'] !== '') {
-                    echo "'" . $value['actualNum'] . "',";
-                }
-                                                                                           }  ?> ]);
 
-        <?php } ?>
+        })
 
     });
 

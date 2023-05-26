@@ -52,7 +52,6 @@ namespace leantime\domain\controllers {
                 return;
             }
 
-            //Updatind User Image
             if (isset($_FILES['file'])) {
                 $_FILES['file']['name'] = "pastedImage.png";
 

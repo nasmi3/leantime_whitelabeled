@@ -75,7 +75,7 @@ class fileupload
      * @var    object configuration object
      */
     public \leantime\core\environment $config;
-    
+
     /**
      * @var S3Client|string
      */
@@ -331,5 +331,41 @@ class fileupload
         }
 
         return false;
+    }
+
+    public function displayImageFile($imageName) {
+
+        $mimes = array
+        (
+            'jpg' => 'image/jpg',
+            'jpeg' => 'image/jpg',
+            'gif' => 'image/gif',
+            'png' => 'image/png'
+        );
+
+        $path = realpath(APP_ROOT."/".$this->config->userFilePath."/");
+
+        $fullPath = $path."/".$imageName;
+
+        if (file_exists(realpath($fullPath))) {
+            if ($fd = fopen(realpath($fullPath), 'rb')) {
+                $path_parts = pathinfo($fullPath);
+                $ext = $path_parts["extension"];
+
+                if ($ext == 'jpg' || $ext == 'jpeg' || $ext == 'gif' || $ext == 'png') {
+                    header('Content-type: ' . $mimes[$ext]);
+                    header('Content-disposition: inline; filename="' . $imageName . '";');
+
+                    $chunkSize = 1024 * 1024;
+
+                    while (!feof($fd)) {
+                        $buffer = fread($fd, $chunkSize);
+                        echo $buffer;
+                    }
+                    fclose($fd);
+                }
+            }
+        }
+
     }
 }

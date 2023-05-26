@@ -2,21 +2,43 @@
     $allProjects = $this->get('allProjects');
     $clients = $this->get('clients');
     $currentClient = $this->get("currentClient");
-
+    $currentClientName = $this->get("currentClientName");
 ?>
 
 <div class="pageheader">
     <div class="pageicon"><span class="fa fa-briefcase"></span></div>
     <div class="pagetitle">
-        <div class="row">
-            <div class="col-lg-4">
-                <h5><?php $this->__("headlines.projects"); ?></h5>
-                <h1><?php echo $this->__("headlines.my_portfolio"); ?></h1>
-            </div>
-            <div class="col-lg-4" style="text-align:right;padding-top:15px">
 
-            </div>
-        </div>
+        <h5><?php $this->__("headlines.projects"); ?></h5>
+        <h1><?php echo $this->__("headlines.my_portfolio"); ?>
+
+            <?php if (count($clients) > 0) {?>
+                //
+                <span class="dropdown dropdownWrapper">
+                <a href="javascript:void(0)" class="dropdown-toggle header-title-dropdown" data-toggle="dropdown">
+                    <?php
+                        if($currentClientName != ''){
+                            $this->e($currentClientName);
+                        }else{
+                            echo $this->__("headline.all_clients");
+                        }
+                    ?>
+                    <i class="fa fa-caret-down"></i>
+                </a>
+
+                <ul class="dropdown-menu">
+                    <li><a href="<?=BASE_URL . "/projects/showMy" ?>"><?=$this->__("headline.all_clients"); ?></a></li>
+                    <?php foreach ($clients as $key => $value) {
+                        echo "<li><a href='" . BASE_URL . "/projects/showMy?client=".$key."'>".$this->escape($value)."</a></li>";
+                    }
+                    ?>
+                </ul>
+            </span>
+            <?php } ?>
+
+        </h1>
+
+
     </div>
 </div>
 
@@ -24,38 +46,32 @@
     <div class="maincontentinner">
 
         <?php echo $this->displayNotification(); ?>
+
         <div class="row">
             <div class="col-md-4">
 
             </div>
             <div class="col-md-4">
-                <div class="center">
-                    <form>
-                        <?php if (count($clients) > 0) { ?>
-                        <select id="client" name="client" class="mainSprintSelector" onchange="form.submit();">
-                            <option value="" <?php if ($currentClient == "") {
-                                echo " selected='selected' ";
-                                             } ?>><?=$this->__("headline.all_clients"); ?></option>
-                            <?php foreach ($clients as $key => $value) {
-                                echo "<option value='" . $key . "'";
-                                if ($currentClient == $key) {
-                                    echo " selected='selected' ";
-                                }
-                                echo">" . $this->escape($value) . "</option>";
-                            }
-                            ?>
-                        </select>
-                        <?php } ?>
-                    </form>
-                </div>
+
             </div>
             <div class="col-md-4">
-
+                <div class="pull-right">
+                    <div class="btn-group viewDropDown">
+                        <button class="btn dropdown-toggle" type="button" data-toggle="dropdown" data-tippy-content="<?=$this->__("popover.view") ?>"><i class=" fas fa-columns"></i></button>
+                        <ul class="dropdown-menu">
+                            <li><a href="<?=BASE_URL ?>/tickets/roadmapAll"><?=$this->__("menu.milestone_gantt") ?></a></li>
+                            <li class="active"><a href="<?=BASE_URL ?>/projects/showMy"><?=$this->__("menu.card_view") ?></a></li>
+                            <li><a href="<?=BASE_URL ?>/tickets/showAllMilestonesOverview"><?=$this->__("menu.table_view") ?></a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="row">
             <div class="col-md-12">
-                <br />
+
+            <br />
+
             </div>
         </div>
 
@@ -78,11 +94,26 @@
 
                         <div class="row " id="projectProgressContainer">
                             <div class="col-md-12">
-                                <small><?php $this->e($project['clientName'])?></small>
-                                <h4>
-                                    <a href="<?=BASE_URL?>/dashboard/show?projectId=<?=$project['id']?>"><?php $this->e($project['name'])?></a>
-                                </h4>
-                                <br />
+                                <div class="row" style="padding-bottom:10px;">
+                                    <div class="col-md-8">
+                                    <div class="projectAvatar">
+                                        <img src="<?=BASE_URL?>/api/projects?projectAvatar=<?=$project['id'] ?>"/>
+                                    </div>
+                                    <small><?php $this->e($project['clientName'])?></small>
+                                    <h4>
+                                        <a href="<?=BASE_URL?>/dashboard/show?projectId=<?=$project['id']?>"><?php $this->e($project['name'])?></a>
+                                    </h4>
+                                    </div>
+                                    <div class="col-md-4" style="text-align:right">
+                                        <?php if($project['status'] !== null && $project['status'] != ''){?>
+                                            <span class="label label-<?php $this->e($project['status'])?>"><?=$this->__("label.project_status_".$project['status']) ?></span><br />
+
+                                        <?php }else{ ?>
+                                            <span class="label label-grey"><?=$this->__("label.no_status")?></span><br />
+                                        <?php } ?>
+                                    </div>
+                                </div>
+
                                 <div class="row">
 
                                     <div class="col-md-7">

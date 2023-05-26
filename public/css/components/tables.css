@@ -254,6 +254,15 @@
     border-right:1px solid var(--secondary-background);
 }
 
+.maincontentinner table.fc-scrollgrid td,
+.maincontentinner table.fc-scrollgrid th{
+    padding:0px;
+}
+
+.maincontentinner table.fc-scrollgrid th {
+    padding:2px;
+}
+
 .maincontentinner .table td input {
     margin-bottom:0px;
 }
@@ -441,9 +450,15 @@ table td{
     border:1px solid var(--neutral);
 }
 
+/*fake height to allow divs in tds to fill out space */
+.table tr {
+    height:1px;
+}
+
 .table td.dropdown-cell {
     padding:0px;
     font-weight: 400;
+    height: inherit;
 }
 
 .table td.dropdown-cell .dropdown {
